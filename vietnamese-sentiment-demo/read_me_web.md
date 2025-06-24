@@ -1,4 +1,3 @@
-cat > README.md << 'EOF'
 # Vietnamese Sentiment Analysis - Web Demo
 
 ## 🚀 Giới Thiệu
