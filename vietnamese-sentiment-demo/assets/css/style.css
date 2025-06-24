@@ -1,4 +1,3 @@
-cat > assets/css/style.css << 'EOF'
 /* Vietnamese Sentiment Analysis - External Styles */
 /* File này để dành cho tương lai khi tách CSS ra riêng */
 
@@ -61,4 +60,3 @@ cat > assets/css/style.css << 'EOF'
     font-size: 0.8rem;
     font-weight: 500;
 }
-EOF
