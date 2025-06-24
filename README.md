@@ -1,5 +1,4 @@
-# Phân tích Cảm xúc Tiếng Việt
-
+# Phân tích cảm xúc quan đáng giá sản phẩm của khách hàng
 ## Tổng quan
 Dự án này thực hiện phân tích cảm xúc trên dữ liệu văn bản tiếng Việt, phân loại các đánh giá thành ba loại cảm xúc: Tích cực (POS), Tiêu cực (NEG) và Trung lập (NEU). Bộ dữ liệu được phân tích, tiền xử lý và chuẩn bị cho việc huấn luyện mô hình học máy.
 
