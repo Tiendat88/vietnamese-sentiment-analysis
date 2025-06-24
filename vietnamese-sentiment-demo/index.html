@@ -1,0 +1,725 @@
+cat > index.html << 'EOF'
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vietnamese Sentiment Analysis - Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --neutral-color: #6b7280;
+            --bg-color: #f8fafc;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-color);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><polygon points="0,0 1000,0 1000,100 0,80"/></svg>');
+            background-size: cover;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Navigation */
+        .nav {
+            background: white;
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .nav-item {
+            padding: 10px 20px;
+            background: var(--bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 60px 0;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Demo Section */
+        .demo-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            margin-bottom: 40px;
+        }
+
+        .demo-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .demo-form {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .demo-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .demo-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .demo-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .demo-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .demo-button .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Results */
+        .result-container {
+            margin-top: 40px;
+            padding: 30px;
+            border-radius: 15px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .result-container.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-container.positive {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            border: 2px solid var(--success-color);
+        }
+
+        .result-container.negative {
+            background: linear-gradient(135deg, #fef2f2, #fecaca);
+            border: 2px solid var(--danger-color);
+        }
+
+        .result-container.neutral {
+            background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+            border: 2px solid var(--neutral-color);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .result-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .result-confidence {
+            background: rgba(255,255,255,0.8);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-left: auto;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .probability-item {
+            background: rgba(255,255,255,0.6);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .probability-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .probability-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* Sample buttons */
+        .sample-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .sample-button {
+            background: #f3f4f6;
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .sample-button:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Dashboard cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .dashboard-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-item {
+                text-align: center;
+            }
+
+            .demo-section {
+                padding: 20px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1><i class="fas fa-chart-line"></i> Vietnamese Sentiment Analysis</h1>
+                <p>Hệ thống phân tích cảm xúc khách hàng thông minh cho doanh nghiệp Việt Nam</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-container">
+                <div class="nav-item active" onclick="showSection('demo')">
+                    <i class="fas fa-play-circle"></i> Thử Nghiệm
+                </div>
+                <div class="nav-item" onclick="showSection('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Demo Section -->
+            <section id="demo" class="section active">
+                <div class="demo-section">
+                    <h2 class="demo-title">🧪 Thử Nghiệm Phân Tích Cảm Xúc</h2>
+                    
+                    <div class="demo-form">
+                        <div class="sample-buttons">
+                            <button class="sample-button" onclick="setSampleText('positive')">📝 Mẫu Tích Cực</button>
+                            <button class="sample-button" onclick="setSampleText('negative')">📝 Mẫu Tiêu Cực</button>
+                            <button class="sample-button" onclick="setSampleText('neutral')">📝 Mẫu Trung Tính</button>
+                            <button class="sample-button" onclick="clearText()">🗑️ Xóa Text</button>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label" for="textInput">
+                                <i class="fas fa-edit"></i> Nhập đoạn text tiếng Việt để phân tích:
+                            </label>
+                            <textarea 
+                                id="textInput" 
+                                class="demo-textarea" 
+                                placeholder="Ví dụ: Sản phẩm này rất tốt, tôi rất hài lòng với chất lượng và dịch vụ..."
+                                maxlength="1000"
+                            ></textarea>
+                            <div style="text-align: right; font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">
+                                <span id="charCount">0</span>/1000 ký tự
+                            </div>
+                        </div>
+
+                        <button class="demo-button" onclick="analyzeSentiment()">
+                            <span class="spinner"></span>
+                            <i class="fas fa-brain"></i> Phân Tích Cảm Xúc
+                        </button>
+                    </div>
+
+                    <div id="resultContainer" class="result-container">
+                        <!-- Results will be displayed here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section">
+                <div class="demo-section">
+                    <h2 class="demo-title">📊 Tính Năng Dashboard</h2>
+                    
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="dashboard-icon" style="color: var(--success-color);">
+                                <i class="fas fa-smile"></i>
+                            </div>
+                            <h3 class="dashboard-title">Real-time Monitoring</h3>
+                            <p class="dashboard-description">
+                                Theo dõi cảm xúc khách hàng trên tất cả các nền tảng trong thời gian thực. 
+                                Nhận cảnh báo ngay khi có vấn đề.
+                            </p>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="dashboard-icon" style="color: var(--primary-color);">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h3 class="dashboard-title">Analytics & Reports</h3>
+                            <p class="dashboard-description">
+                                Báo cáo chi tiết về xu hướng cảm xúc, phân tích sản phẩm, 
+                                và insights để cải thiện business.
+                            </p>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="dashboard-icon" style="color: var(--warning-color);">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <h3 class="dashboard-title">Smart Alerts</h3>
+                            <p class="dashboard-description">
+                                Hệ thống cảnh báo thông minh qua email, SMS khi phát hiện 
+                                sentiment tiêu cực hoặc vấn đề cần xử lý.
+                            </p>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="dashboard-icon" style="color: var(--danger-color);">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                            <h3 class="dashboard-title">API Integration</h3>
+                            <p class="dashboard-description">
+                                Tích hợp dễ dàng với Shopee, Lazada, Facebook, 
+                                và các nền tảng khác qua API.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #f0f7ff, #e6f3ff); border-radius: 15px;">
+                        <h3 style="color: var(--primary-color); margin-bottom: 15px;">🚀 Sẵn sàng bắt đầu?</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                            Liên hệ ngay để được tư vấn miễn phí và nhận ưu đãi đặc biệt!
+                        </p>
+                        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                            <button onclick="contact('call')" style="background: var(--success-color); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                                📞 Gọi Tư Vấn
+                            </button>
+                            <button onclick="contact('email')" style="background: var(--primary-color); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                                📧 Nhận Demo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Sample texts for demo
+        const sampleTexts = {
+            positive: "Sản phẩm tuyệt vời! Chất lượng vượt mong đợi, giao hàng nhanh, đóng gói cẩn thận. Shop tư vấn nhiệt tình, phục vụ tận tâm. Tôi rất hài lòng với lần mua sắm này và sẽ tiếp tục ủng hộ shop!",
+            negative: "Rất thất vọng với sản phẩm này! Chất lượng kém, không giống mô tả, màu sắc phai. Giao hàng chậm, đóng gói cẩu thả. Dịch vụ khách hàng thái độ không professional. Không khuyến khích mua!",
+            neutral: "Sản phẩm bình thường, không có gì đặc biệt. Chất lượng tạm được, phù hợp với mức giá. Giao hàng đúng hẹn, đóng gói ổn. Tổng thể okela."
+        };
+
+        // Character count functionality
+        const textInput = document.getElementById('textInput');
+        const charCount = document.getElementById('charCount');
+
+        textInput.addEventListener('input', function() {
+            const count = this.value.length;
+            charCount.textContent = count;
+            
+            if (count > 800) {
+                charCount.style.color = 'var(--danger-color)';
+            } else if (count > 600) {
+                charCount.style.color = 'var(--warning-color)';
+            } else {
+                charCount.style.color = 'var(--text-secondary)';
+            }
+        });
+
+        // Navigation functionality
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            document.getElementById(sectionId).classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        // Sample text functions
+        function setSampleText(type) {
+            textInput.value = sampleTexts[type];
+            textInput.dispatchEvent(new Event('input'));
+        }
+
+        function clearText() {
+            textInput.value = '';
+            textInput.dispatchEvent(new Event('input'));
+            hideResult();
+        }
+
+        // Main sentiment analysis function
+        function analyzeSentiment() {
+            const text = textInput.value.trim();
+            
+            if (!text) {
+                alert('Vui lòng nhập text để phân tích!');
+                return;
+            }
+
+            const button = document.querySelector('.demo-button');
+            const spinner = button.querySelector('.spinner');
+            
+            button.disabled = true;
+            spinner.style.display = 'inline-block';
+            button.innerHTML = '<span class="spinner" style="display: inline-block;"></span> Đang phân tích...';
+
+            setTimeout(() => {
+                const result = performSentimentAnalysis(text);
+                displayResult(result);
+                
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-brain"></i> Phân Tích Cảm Xúc';
+            }, 2000);
+        }
+
+        // Mock sentiment analysis
+        function performSentimentAnalysis(text) {
+            const positiveWords = ['tốt', 'đẹp', 'tuyệt', 'hài lòng', 'thích', 'xuất sắc', 'tuyệt vời', 'chất lượng', 'nhanh', 'cẩn thận', 'nhiệt tình'];
+            const negativeWords = ['tệ', 'dở', 'kém', 'thất vọng', 'không tốt', 'chậm', 'cẩu thả', 'không giống', 'phai', 'không khuyến khích'];
+            
+            const lowerText = text.toLowerCase();
+            let positiveScore = 0;
+            let negativeScore = 0;
+            
+            positiveWords.forEach(word => {
+                if (lowerText.includes(word)) positiveScore += 1;
+            });
+            
+            negativeWords.forEach(word => {
+                if (lowerText.includes(word)) negativeScore += 1;
+            });
+            
+            let sentiment, confidence;
+            
+            if (positiveScore > negativeScore) {
+                sentiment = 'positive';
+                confidence = Math.min(0.7 + (positiveScore - negativeScore) * 0.1, 0.98);
+            } else if (negativeScore > positiveScore) {
+                sentiment = 'negative';
+                confidence = Math.min(0.7 + (negativeScore - positiveScore) * 0.1, 0.98);
+            } else {
+                sentiment = 'neutral';
+                confidence = 0.6 + Math.random() * 0.2;
+            }
+            
+            const baseProb = (1 - confidence) / 2;
+            let probabilities = {
+                positive: sentiment === 'positive' ? confidence : baseProb,
+                negative: sentiment === 'negative' ? confidence : baseProb,
+                neutral: sentiment === 'neutral' ? confidence : baseProb
+            };
+            
+            const total = probabilities.positive + probabilities.negative + probabilities.neutral;
+            Object.keys(probabilities).forEach(key => {
+                probabilities[key] = probabilities[key] / total;
+            });
+            
+            return { sentiment, confidence, probabilities, text };
+        }
+
+        // Display result function
+        function displayResult(result) {
+            const container = document.getElementById('resultContainer');
+            
+            const sentimentLabels = {
+                positive: { text: 'Tích Cực', icon: '😊', color: 'var(--success-color)' },
+                negative: { text: 'Tiêu Cực', icon: '😞', color: 'var(--danger-color)' },
+                neutral: { text: 'Trung Tính', icon: '😐', color: 'var(--neutral-color)' }
+            };
+            
+            const sentimentInfo = sentimentLabels[result.sentiment];
+            
+            container.className = `result-container ${result.sentiment}`;
+            container.innerHTML = `
+                <div class="result-header">
+                    <span class="result-icon">${sentimentInfo.icon}</span>
+                    <h3 class="result-title">Cảm xúc: ${sentimentInfo.text}</h3>
+                    <span class="result-confidence">Độ tin cậy: ${(result.confidence * 100).toFixed(1)}%</span>
+                </div>
+                
+                <div class="result-details">
+                    <div class="probability-item">
+                        <div class="probability-label">Tích Cực</div>
+                        <div class="probability-value" style="color: var(--success-color);">
+                            ${(result.probabilities.positive * 100).toFixed(1)}%
+                        </div>
+                    </div>
+                    <div class="probability-item">
+                        <div class="probability-label">Tiêu Cực</div>
+                        <div class="probability-value" style="color: var(--danger-color);">
+                            ${(result.probabilities.negative * 100).toFixed(1)}%
+                        </div>
+                    </div>
+                    <div class="probability-item">
+                        <div class="probability-label">Trung Tính</div>
+                        <div class="probability-value" style="color: var(--neutral-color);">
+                            ${(result.probabilities.neutral * 100).toFixed(1)}%
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.classList.add('show');
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideResult() {
+            const container = document.getElementById('resultContainer');
+            container.classList.remove('show');
+        }
+
+        function contact(type) {
+            if (type === 'call') {
+                alert('📞 Liên hệ tư vấn:\n\nHotline: 0901.234.567\nEmail: contact@sentiment.vn\n\n🎁 Miễn phí tư vấn và demo!');
+            } else {
+                alert('📧 Nhận demo:\n\nEmail: contact@sentiment.vn\nWebsite: sentiment.vn\n\n✅ Chúng tôi sẽ liên hệ trong 24h!');
+            }
+        }
+
+        // Keyboard shortcut
+        textInput.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                analyzeSentiment();
+            }
+        });
+    </script>
+</body>
+</html>
+EOF
